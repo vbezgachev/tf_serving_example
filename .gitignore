@@ -1,0 +1,8 @@
+.DS_Store
+
+checkpoints/
+data/
+__pycache__/
+svnh_test_images/
+.vscode/
+*.pkl
