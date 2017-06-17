@@ -11,13 +11,13 @@ class GAN:
     :param beta1: The beta1 parameter for Adam.
     """
     def __init__(self, real_size, z_size, learning_rate, num_classes=10,
-                 alpha=0.2, beta1=0.5):
+                 alpha=0.2, beta1=0.5, drop_rate=0.5):
         tf.reset_default_graph()
 
         self.learning_rate = tf.Variable(learning_rate, trainable=False)
         inputs = self.model_inputs(real_size, z_size)
         self.input_real, self.input_z, self.y, self.label_mask = inputs
-        self.drop_rate = tf.placeholder_with_default(.5, (), "drop_rate")
+        self.drop_rate = tf.placeholder_with_default(drop_rate, (), "drop_rate")
 
         loss_results = self.model_loss(self.input_real, self.input_z,
                                        real_size[2], self.y, num_classes,
@@ -26,7 +26,9 @@ class GAN:
                                        drop_rate=self.drop_rate)
 
         self.d_loss, self.g_loss, self.correct, \
-        self.masked_correct, self.samples, self.pred_class = loss_results
+            self.masked_correct, self.samples, self.pred_class, \
+                self.discriminator_class_logits, self.discriminator_out = \
+                    loss_results
 
         self.d_opt, self.g_opt, self.shrink_lr = self.model_opt(self.d_loss,
                                                                 self.g_loss,
@@ -65,7 +67,7 @@ class GAN:
         g_model = self.generator(input_z, output_dim, alpha=alpha, size_mult=g_size_mult)
         d_on_data = self.discriminator(input_real, alpha=alpha, drop_rate=drop_rate,
                                        size_mult=d_size_mult)
-        _, class_logits_on_data, gan_logits_on_data, data_features = d_on_data
+        out, class_logits_on_data, gan_logits_on_data, data_features = d_on_data
         d_on_samples = self.discriminator(g_model, reuse=True, alpha=alpha, drop_rate=drop_rate,
                                           size_mult=d_size_mult)
         _, _, gan_logits_on_samples, sample_features = d_on_samples
@@ -111,7 +113,8 @@ class GAN:
         correct = tf.reduce_sum(tf.to_float(eq), name='correct_pred_sum')
         masked_correct = tf.reduce_sum(label_mask * tf.to_float(eq))
 
-        return d_loss, g_loss, correct, masked_correct, g_model, pred_class
+        return d_loss, g_loss, correct, masked_correct, g_model, pred_class,\
+            class_logits_on_data, out
 
 
     def model_opt(self, d_loss, g_loss, learning_rate, beta1):
@@ -237,6 +240,6 @@ class GAN:
             max_val = tf.squeeze(max_val)
             gan_logits = tf.log(tf.reduce_sum(tf.exp(stable_class_logits), 1)) + max_val
 
-            out = tf.nn.softmax(class_logits)
+            out = tf.nn.softmax(class_logits, name='discriminator_out')
 
             return out, class_logits, gan_logits, features

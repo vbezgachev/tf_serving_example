@@ -156,6 +156,10 @@ Successfully exported model to inception-export
 ```
 
 ## Test the functioning
+- Start the gRPC server
+```
+bazel-bin/tensorflow_serving/model_servers/tensorflow_model_server --port=9000 --model_name=inception --model_base_path=inception-export &> inception_log &
+```
 - Download test image
 ```
 apt-get update

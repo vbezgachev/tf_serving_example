@@ -4,5 +4,7 @@ checkpoints/
 data/
 __pycache__/
 svnh_test_images/
+gan-export/
+export/
 .vscode/
 *.pkl

@@ -1,7 +1,12 @@
+import os
+import shutil
+
 import tensorflow as tf
+from tensorflow.python.framework import graph_util
 
 import utils
 from gan import GAN
+
 
 
 tf.app.flags.DEFINE_string('checkpoint_dir', '/tmp/train',
@@ -10,52 +15,61 @@ tf.app.flags.DEFINE_string('output_dir', '/tmp/export',
                            """Directory where to export the model.""")
 
 
-def preprocess_image(image_buffer):
-    """Preprocess JPEG encoded bytes to 3D float Tensor."""
-    image = tf.image.decode_jpeg(image_buffer, channels=3)
-    image = utils.scale(image)
-
-    return image
+#def preprocess_image(image_buffer):
+#    """Preprocess JPEG encoded bytes to 3D float Tensor."""
+#    image = tf.image.decode_jpeg(image_buffer, channels=3)
+#    image = utils.scale(image)
+#
+#    return image
 
 
 def main(_):
 
-    #tf.saved_model.utils.build_tensor_info()
+    # Create GAN model
+    real_size = (32, 32, 3)
+    z_size = 100
+    learning_rate = 0.0003
+    net = GAN(real_size, z_size, learning_rate, drop_rate=0.)
 
-    loaded_graph = tf.Graph()
+    # Create saver to restore from checkpoints
+    saver = tf.train.Saver()
 
-    with tf.Session(graph=loaded_graph) as sess:
-        saver = tf.train.import_meta_graph('./checkpoints/generator.ckpt.meta')
+    with tf.Session() as sess:
+        # Restore the model from last checkpoints
         saver.restore(sess, tf.train.latest_checkpoint('./checkpoints'))
 
-        # Input transformation.
-        serialized_tf_example = tf.placeholder(tf.string, name='tf_example')
-        feature_configs = {
-            'image/encoded': tf.FixedLenFeature(
-                shape=[32, 32, 3], dtype=tf.string),
-        }
-        tf_example = tf.parse_example(serialized_tf_example, feature_configs)
-        jpegs = tf_example['image/encoded']
-        images = tf.map_fn(preprocess_image, jpegs, dtype=tf.float32)
+        # (re-)create export directory
+        export_path = 'gan-export'
+        if os.path.exists(export_path):
+            shutil.rmtree(export_path)
 
-        # Create GAN model
-        real_size = (32, 32, 3)
-        z_size = 100
-        learning_rate = 0.0003
-        net = GAN(real_size, z_size, learning_rate)
+        # create model builder
+        builder = tf.saved_model.builder.SavedModelBuilder(export_path)
 
-        # Restore variables from the last checkpoint
-        pred_class_tensor = loaded_graph.get_tensor_by_name("pred_class:0")
-        inputs_real_tensor = loaded_graph.get_tensor_by_name("input_real:0")
-        drop_rate_tensor = loaded_graph.get_tensor_by_name("drop_rate:0")
+        # create tensors info
+        predict_tensor_inputs_info = tf.saved_model.utils.build_tensor_info(net.input_real)
+        predict_tensor_scores_info = tf.saved_model.utils.build_tensor_info(
+            net.discriminator_out)
 
-        # Build the signature_def_map.
-        classification_inputs = tf.saved_model.utils.build_tensor_info(
-            serialized_tf_example)
-        classification_outputs_classes = tf.saved_model.utils.build_tensor_info(
-            net.pred_class)
-        classification_outputs_scores = tf.saved_model.utils.build_tensor_info(
-            values)
+        # build prediction signature
+        prediction_signature = (
+            tf.saved_model.signature_def_utils.build_signature_def(
+                inputs={'images': predict_tensor_inputs_info},
+                outputs={'scores': predict_tensor_scores_info},
+                method_name=tf.saved_model.signature_constants.PREDICT_METHOD_NAME
+            )
+        )
+
+        # save the model
+        legacy_init_op = tf.group(tf.tables_initializer(), name='legacy_init_op')
+        builder.add_meta_graph_and_variables(
+            sess, [tf.saved_model.tag_constants.SERVING],
+            signature_def_map={
+                'predict_images': prediction_signature
+            },
+            legacy_init_op=legacy_init_op)
+
+        builder.save()
 
 
 if __name__ == '__main__':
