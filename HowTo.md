@@ -221,3 +221,15 @@ outputs {
   }
 }
 ```
+
+## Train your model
+**Use TensorFlow 1.1 (not 1.2)!**
+
+## Export your model
+
+## Copy exported model into the Docker
+- Go to the folder with exported model
+- Copy it into the Docker container
+```
+docker cp ./model-export inception_container:/serving
+```

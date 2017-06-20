@@ -1,10 +1,10 @@
 .DS_Store
 
-checkpoints/
+checkpoints*/
 data/
 __pycache__/
 svnh_test_images/
-gan-export/
+gan-export*/
 export/
 .vscode/
 *.pkl

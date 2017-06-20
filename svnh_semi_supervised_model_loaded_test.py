@@ -35,7 +35,7 @@ def main(_):
         drop_rate_tensor = loaded_graph.get_tensor_by_name("drop_rate:0")
         correct_pred_sum_tensor = loaded_graph.get_tensor_by_name("correct_pred_sum:0")
 
-        correct, _ = sess.run(
+        correct, pred_class = sess.run(
             [correct_pred_sum_tensor, pred_class_tensor],
             feed_dict={
                 inputs_real_tensor: test_images,
@@ -43,7 +43,7 @@ def main(_):
                 drop_rate_tensor: 0.})
 
         print("No. correct predictions: {}".format(correct))
-        #print("Predicted classes: {}".format(pred_class))
+        print("Predicted classes: {}".format(pred_class))
 
 
 if __name__ == '__main__':

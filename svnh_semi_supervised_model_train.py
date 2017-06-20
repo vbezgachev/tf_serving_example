@@ -102,7 +102,9 @@ def main():
     z_size = 100
     learning_rate = 0.0003
 
-    net = GAN(real_size, z_size, learning_rate)
+    tf.reset_default_graph()
+    input_real = tf.placeholder(tf.float32, (None, *real_size), name='input_real')
+    net = GAN(input_real, z_size, learning_rate)
 
     dataset = Dataset(trainset, testset)
 

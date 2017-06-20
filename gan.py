@@ -10,20 +10,20 @@ class GAN:
     :param alpha: The slope of the left half of the leaky ReLU activation
     :param beta1: The beta1 parameter for Adam.
     """
-    def __init__(self, real_size, z_size, learning_rate, num_classes=10,
-                 alpha=0.2, beta1=0.5, drop_rate=0.5):
-        tf.reset_default_graph()
-
+    def __init__(self, input_real, z_size, learning_rate, num_classes=10,
+                 alpha=0.2, beta1=0.5, drop_rate=.5):
         self.learning_rate = tf.Variable(learning_rate, trainable=False)
-        inputs = self.model_inputs(real_size, z_size)
-        self.input_real, self.input_z, self.y, self.label_mask = inputs
+        self.input_real = input_real
+        self.input_z = tf.placeholder(tf.float32, (None, z_size), name='input_z')
+        self.y = tf.placeholder(tf.int32, (None), name='y')
+        self.label_mask = tf.placeholder(tf.int32, (None), name='label_mask')
         self.drop_rate = tf.placeholder_with_default(drop_rate, (), "drop_rate")
 
         loss_results = self.model_loss(self.input_real, self.input_z,
-                                       real_size[2], self.y, num_classes,
+                                       self.input_real.shape[3], self.y, num_classes,
                                        label_mask=self.label_mask,
-                                       alpha=alpha,
-                                       drop_rate=self.drop_rate)
+                                       drop_rate=self.drop_rate,
+                                       alpha=alpha)
 
         self.d_loss, self.g_loss, self.correct, \
             self.masked_correct, self.samples, self.pred_class, \
@@ -35,17 +35,8 @@ class GAN:
                                                                 self.learning_rate, beta1)
 
 
-    def model_inputs(self, real_dim, z_dim):
-        inputs_real = tf.placeholder(tf.float32, (None, *real_dim), name='input_real')
-        inputs_z = tf.placeholder(tf.float32, (None, z_dim), name='input_z')
-        y = tf.placeholder(tf.int32, (None), name='y')
-        label_mask = tf.placeholder(tf.int32, (None), name='label_mask')
-
-        return inputs_real, inputs_z, y, label_mask
-
-
     def model_loss(self, input_real, input_z, output_dim, y, num_classes,
-                   label_mask, alpha=0.2, drop_rate=0.):
+                   label_mask, drop_rate, alpha=0.2):
         """
         Get the loss for the discriminator and generator
         :param input_real: Images from the real dataset
@@ -65,10 +56,10 @@ class GAN:
 
         # Here we run the generator and the discriminator
         g_model = self.generator(input_z, output_dim, alpha=alpha, size_mult=g_size_mult)
-        d_on_data = self.discriminator(input_real, alpha=alpha, drop_rate=drop_rate,
+        d_on_data = self.discriminator(input_real, drop_rate=drop_rate, alpha=alpha,
                                        size_mult=d_size_mult)
         out, class_logits_on_data, gan_logits_on_data, data_features = d_on_data
-        d_on_samples = self.discriminator(g_model, reuse=True, alpha=alpha, drop_rate=drop_rate,
+        d_on_samples = self.discriminator(g_model, drop_rate=drop_rate, reuse=True, alpha=alpha,
                                           size_mult=d_size_mult)
         _, _, gan_logits_on_samples, sample_features = d_on_samples
 
@@ -172,7 +163,7 @@ class GAN:
             return out
 
 
-    def discriminator(self, x, reuse=False, alpha=0.2, drop_rate=0., num_classes=10, size_mult=64):
+    def discriminator(self, x, drop_rate, reuse=False, alpha=0.2, num_classes=10, size_mult=64):
         with tf.variable_scope('discriminator', reuse=reuse):
             x = tf.layers.dropout(x, rate=drop_rate/2.5)
 
