@@ -9,26 +9,38 @@ from gan import GAN
 import utils
 
 
+'''
+Trains the GAN model
+'''
+
+# constants
 checkpoints_dir = 'checkpoints/'
 
-def common_init():
+def create_checkpoints_dir():
+    '''
+    Creates the checkpoints directory if it does not exist
+    '''
     if not os.path.exists(checkpoints_dir):
         os.makedirs(checkpoints_dir)
 
 
-def model_inputs(real_dim, z_dim):
-    inputs_real = tf.placeholder(tf.float32, (None, *real_dim), name='input_real')
-    inputs_z = tf.placeholder(tf.float32, (None, z_dim), name='input_z')
-    y = tf.placeholder(tf.int32, (None), name='y')
-    label_mask = tf.placeholder(tf.int32, (None), name='label_mask')
-
-    return inputs_real, inputs_z, y, label_mask
-
-
 def train(net, dataset, epochs, batch_size, z_size):
+    '''
+    Main train loop
+    :param net: GAN model
+    :param dataset: Dataset of images and batches
+    :param epochs: Number of train epochs
+    :param batch_size: Image batch size
+    :param z_size: Size for the noise vector
+    :return: Tripple of (train accuracies, test accuracies, generated samples)
+    '''
     saver = tf.train.Saver()
+
+    # noise to generate the fake images; it used used at the end
+    # of each epoch to check how good the generator is
     sample_z = np.random.normal(0, 1, size=(50, z_size))
 
+    # helpers
     samples, train_accuracies, test_accuracies = [], [], []
     steps = 0
 
@@ -45,10 +57,10 @@ def train(net, dataset, epochs, batch_size, z_size):
                 steps += 1
                 num_examples += label_mask.sum()
 
-                # Sample random noise for G
+                # sample random noise for G
                 batch_z = np.random.normal(0, 1, size=(batch_size, z_size))
 
-                # Run optimizers
+                # run optimizers
                 t1 = time.time()
                 _, _, correct = sess.run([net.d_opt, net.g_opt, net.masked_correct],
                                          feed_dict={net.input_real: x, net.input_z: batch_z,
@@ -56,11 +68,14 @@ def train(net, dataset, epochs, batch_size, z_size):
                 t2 = time.time()
                 num_correct += correct
 
+            # run learning rate adjustment
             sess.run([net.shrink_lr])
 
+            # calcualte and print train statistic
             train_accuracy = num_correct / float(num_examples)
             print("\t\tClassifier train accuracy: ", train_accuracy)
 
+            # run prediction on test images
             num_examples = 0
             num_correct = 0
             for x, y in dataset.batches(batch_size, dataset, "test"):
@@ -71,12 +86,14 @@ def train(net, dataset, epochs, batch_size, z_size):
                     net.input_real: x, net.y : y, net.drop_rate: 0.})
                 num_correct += correct
 
+            # calculate and print test statistic
             test_accuracy = num_correct / float(num_examples)
             print("\t\tClassifier test accuracy", test_accuracy)
             print("\t\tStep time: ", t2 - t1)
             t2e = time.time()
             print("\t\tEpoch time: ", t2e - t1e)
 
+            # generate samples for visual check
             gen_samples = sess.run(net.samples, feed_dict={
                 net.input_z: sample_z})
             samples.append(gen_samples)
@@ -94,10 +111,13 @@ def train(net, dataset, epochs, batch_size, z_size):
 
 
 def main():
-    common_init()
+    # preparations
+    create_checkpoints_dir()
     utils.download_train_and_test_data()
     trainset, testset = utils.load_data_sets()
 
+    # create real input for the GAN model (its dicriminator) and
+    # GAN model itself
     real_size = (32, 32, 3)
     z_size = 100
     learning_rate = 0.0003
@@ -106,8 +126,10 @@ def main():
     input_real = tf.placeholder(tf.float32, (None, *real_size), name='input_real')
     net = GAN(input_real, z_size, learning_rate)
 
+    # craete dataset
     dataset = Dataset(trainset, testset)
 
+    # train the model
     batch_size = 128
     epochs = 25
     _, _, _ = train(net, dataset, epochs, batch_size, z_size)

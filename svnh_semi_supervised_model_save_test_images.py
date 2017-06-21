@@ -4,6 +4,10 @@ import scipy.misc
 
 import utils
 
+'''
+Extracts random 64 test images from the Matlab format and save them
+onto the disk
+'''
 
 def main():
     images_dir = 'svnh_test_images'

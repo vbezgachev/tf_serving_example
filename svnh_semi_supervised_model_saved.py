@@ -5,7 +5,12 @@ import tensorflow as tf
 
 from gan import GAN
 
+'''
+Loads the saved GAN model, injects additional layers for the
+input transformation and export the model into protobuf format
+'''
 
+# Command line arguments
 tf.app.flags.DEFINE_string('checkpoint_dir', './checkpoints',
                            """Directory where to read training checkpoints.""")
 tf.app.flags.DEFINE_string('output_dir', './gan-export',
@@ -16,7 +21,14 @@ FLAGS = tf.app.flags.FLAGS
 
 
 def preprocess_image(image_buffer):
-    """Preprocess JPEG encoded bytes to 3D float Tensor."""
+    '''
+    Preprocess JPEG encoded bytes to 3D float Tensor and rescales
+    it so that pixels are in a range of [-1, 1]
+
+    :param image_buffer: Buffer that contains JPEG image
+    :return: 4D image tensor (1, width, height,channels) with pixels scaled
+             to [-1, 1]. First dimension is a batch size (1 is our case)
+    '''
 
     # Decode the string as an RGB JPEG.
     # Note that the resulting image contains an unknown height and width
@@ -54,7 +66,7 @@ def main(_):
         jpegs = tf_example['image/encoded']
         images = tf.map_fn(preprocess_image, jpegs, dtype=tf.float32)
         images = tf.squeeze(images, [0])
-        # now the image shape is (1, ?, ?, 32)
+        # now the image shape is (1, ?, ?, 3)
 
         # Create GAN model
         z_size = 100
@@ -67,15 +79,12 @@ def main(_):
         with tf.Session() as sess:
             # Restore the model from last checkpoints
             ckpt = tf.train.get_checkpoint_state(FLAGS.checkpoint_dir)
-            print(ckpt)
-            print(ckpt.model_checkpoint_path)
             saver.restore(sess, ckpt.model_checkpoint_path)
 
             # (re-)create export directory
             export_path = os.path.join(
                 tf.compat.as_bytes(FLAGS.output_dir),
                 tf.compat.as_bytes(str(FLAGS.model_version)))
-            print(export_path)
             if os.path.exists(export_path):
                 shutil.rmtree(export_path)
 

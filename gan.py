@@ -2,16 +2,22 @@ import tensorflow as tf
 
 class GAN:
     """
-    A GAN model.
-    :param real_size: The shape of the real data.
-    :param z_size: The number of entries in the z code vector.
-    :param learnin_rate: The learning rate to use for Adam.
-    :param num_classes: The number of classes to recognize.
-    :param alpha: The slope of the left half of the leaky ReLU activation
-    :param beta1: The beta1 parameter for Adam.
+    Creates and stores inputs, outputs, generator and discriminator of the GAN model
     """
     def __init__(self, input_real, z_size, learning_rate, num_classes=10,
                  alpha=0.2, beta1=0.5, drop_rate=.5):
+        """
+        Initializes the GAN model.
+
+        :param input_real: Real data for the discriminator
+        :param z_size: The number of entries in the noise vector.
+        :param learning_rate: The learning rate to use for Adam optimizer.
+        :param num_classes: The number of classes to recognize.
+        :param alpha: The slope of the left half of the leaky ReLU activation
+        :param beta1: The beta1 parameter for Adam.
+        :param drop_rate: RThe probability of dropping a hidden unit (used in discriminator)
+        """
+
         self.learning_rate = tf.Variable(learning_rate, trainable=False)
         self.input_real = input_real
         self.input_z = tf.placeholder(tf.float32, (None, z_size), name='input_z')
@@ -39,13 +45,15 @@ class GAN:
                    label_mask, drop_rate, alpha=0.2):
         """
         Get the loss for the discriminator and generator
+
         :param input_real: Images from the real dataset
-        :param input_z: Z input
+        :param input_z: Noise input of the generator
         :param output_dim: The number of channels in the output image
         :param y: Integer class labels
-        :param num_classes: The number of classes
+        :param num_classes: The number of classes to recognize
+        :param label_mask: Masks the labels that should be ignored by the semi-suprvised learning
+        :param drop_rate: The probability of dropping a hidden unit (used in discriminator)
         :param alpha: The slope of the left half of leaky ReLU activation
-        :param drop_rate: The probability of dropping a hidden unit
         :return: A tuple of (discriminator loss, generator loss)
         """
 
@@ -111,11 +119,13 @@ class GAN:
     def model_opt(self, d_loss, g_loss, learning_rate, beta1):
         """
         Get optimization operations
+
         :param d_loss: Discriminator loss Tensor
         :param g_loss: Generator loss Tensor
-        :param learning_rate: Learning Rate Placeholder
+        :param learning_rate: Learning rate placeholder
         :param beta1: The exponential decay rate for the 1st moment in the optimizer
-        :return: A tuple of (discriminator training operation, generator training operation)
+        :return: A tripple of (discriminator training operation, generator training operation,
+                 shrink learning rate)
         """
         # Get weights and biases to update. Get them separately for the discriminator and
         # the generator
@@ -126,7 +136,6 @@ class GAN:
             assert t in d_vars or t in g_vars
 
         # Minimize both players' costs simultaneously
-        #with tf.control_dependencies(tf.get_collection(tf.GraphKeys.UPDATE_OPS)):
         d_train_opt = tf.train. \
                         AdamOptimizer(learning_rate=learning_rate, beta1=beta1). \
                             minimize(d_loss, var_list=d_vars)
@@ -140,6 +149,17 @@ class GAN:
 
 
     def generator(self, z, output_dim, reuse=False, alpha=0.2, training=True, size_mult=128):
+        '''
+        Create a generator for the GAN model
+
+        :param z: Noise input
+        :param output_dim: The number of channels in the output image
+        :param reuse: Whether the variables should be reused in the generator scope
+        :param alpha: The slope of the left half of leaky ReLU activation
+        :param training: Whether we are in training mode. Using of the batch normalization depends
+                         on this parammeter
+        :param size_mult: Multiplication size of each layer of the generator
+        '''
         with tf.variable_scope('generator', reuse=reuse):
             # First fully connected layer
             x1 = tf.layers.dense(z, 4 * 4 * size_mult * 4)
@@ -164,6 +184,17 @@ class GAN:
 
 
     def discriminator(self, x, drop_rate, reuse=False, alpha=0.2, num_classes=10, size_mult=64):
+        '''
+        Create a dicriminator for the GAN model
+
+        :param x: Input image (real or fake)
+        :param drop_rate: The probability of dropping a hidden unit
+        :param reuse: Whether the variables should be reused in the generator scope
+        :param alpha: The slope of the left half of leaky ReLU activation
+        :param num_classes: The number of classes to recognize
+        :param size_mult: Multiplication size of each layer of the generator
+        '''
+
         with tf.variable_scope('discriminator', reuse=reuse):
             x = tf.layers.dropout(x, rate=drop_rate/2.5)
 
