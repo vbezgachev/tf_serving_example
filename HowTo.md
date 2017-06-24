@@ -233,3 +233,13 @@ outputs {
 ```
 docker cp ./model-export inception_container:/serving
 ```
+
+## Execute client locally to call the server in the Docker
+- We need to install grpcio, grpcio-tools in our python environment
+- Generate Python code from protobuf
+  * Rename serving/tensorflow to e.g. serving/tensorflow_
+  * Copy serving/tensorflow_/tensorflow to serving (i.e. move it one level up). That ensures that imports in proto files work correctly
+  * Execute
+  ```
+  python -m grpc.tools.protoc /home/vetal/Work/dl/serving/tensorflow_serving/apis/*.proto --python_out=./tf_deploy --grpc_python_out=./tf_deploy --proto_path=/home/vetal/Work/dl/serving
+  ```
