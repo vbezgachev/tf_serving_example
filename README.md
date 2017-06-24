@@ -1,0 +1,5 @@
+## TensorFlow Serving test project
+The purpose of this project is to test capabilities of the [TensorFlow Serving](https://tensorflow.github.io/serving/). It should host a GAN model to predict [Street View House Numbers](http://ufldl.stanford.edu/housenumbers/).  
+Mentioned GAN model is trained using [semi-supervised learning](https://en.wikipedia.org/wiki/Semi-supervised_learning) technique and bases on the model taught at [Udacity Deep Learning Foundations](https://www.udacity.com/course/deep-learning-nanodegree-foundation--nd101) course. The original Jupyter Notebook can be found at [GitHub](https://github.com/udacity/deep-learning/tree/master/semi-supervised).  
+Additionally I made it possible to export trained model into [Protobuf](https://github.com/google/protobuf) and implemented a client to request the prediction for a number image.  
+More details on the project can be found at my [blog](https://medium.com/@vitaly.bezgachev/how-to-deploy-machine-learning-models-with-tensorflow-part-1-make-your-model-ready-for-serving-776a14ec3198). 
