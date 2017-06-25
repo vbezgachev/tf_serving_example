@@ -116,6 +116,8 @@ def main(_):
 
             builder.save()
 
+    print("Successfully exported GAN model version '{}' into '{}'".format(
+        FLAGS.model_version, FLAGS.output_dir))
 
 if __name__ == '__main__':
     tf.app.run()
