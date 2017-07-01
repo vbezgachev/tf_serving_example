@@ -1,0 +1,36 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: gan-deployment
+spec:
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: gan-server
+    spec:
+      containers:
+      - name: gan-container
+        image: ganecr.azurecr.io/tensorflow-serving-gan
+        command:
+        - /bin/sh
+        - -c
+        args:
+        - serving/bazel-bin/tensorflow_serving/model_servers/tensorflow_model_server
+          --port=9000 --model_name=gan --model_base_path=serving/gan-export
+        ports:
+        - containerPort: 9000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    run: gan-service
+  name: gan-service
+spec:
+  ports:
+  - port: 9000
+    targetPort: 9000
+  selector:
+    app: gan-server
+  type: LoadBalancer
