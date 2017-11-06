@@ -282,7 +282,7 @@ For deployment we use kubectl - command line interface for running commands agai
 - Create Kubernetes deployment
 ```
 cd <path to GAN project>
-kubectl create -k gan_k8s.yaml
+kubectl create -f gan_k8s.yaml
 ```
 You should get:
 ```
