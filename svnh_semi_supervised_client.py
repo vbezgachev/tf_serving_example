@@ -1,5 +1,3 @@
-#!/usr/bin/env python2.7
-
 '''
 Send JPEG image to tensorflow_model_server loaded with GAN model.
 
