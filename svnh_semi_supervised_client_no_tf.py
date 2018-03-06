@@ -24,34 +24,8 @@ from tensorflow_serving.apis import prediction_service_pb2
 from tensorflow.core.framework import tensor_pb2
 from tensorflow.core.framework import tensor_shape_pb2
 from tensorflow.core.framework import types_pb2
-import dtypes
 
 import six as _six
-
-
-'''
-Takes from https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/util/compat.py
-'''
-def as_bytes(bytes_or_text, encoding='utf-8'):
-    """Converts either bytes or unicode to `bytes`, using utf-8 encoding for text.
-
-    Args:
-        bytes_or_text: A `bytes`, `str`, or `unicode` object.
-        encoding: A string indicating the charset for encoding unicode.
-
-    Returns:
-        A `bytes` object.
-
-    Raises:
-        TypeError: If `bytes_or_text` is not a binary or unicode string.
-    """
-    if isinstance(bytes_or_text, _six.text_type):
-        return bytes_or_text.encode(encoding)
-    elif isinstance(bytes_or_text, bytes):
-        return bytes_or_text
-    else:
-        raise TypeError('Expected binary or unicode string, got %r' %
-                        (bytes_or_text,))
 
 
 def parse_args():
