@@ -16,6 +16,7 @@ import tensorflow as tf
 # TensorFlow serving stuff to send messages
 from tensorflow_serving.apis import predict_pb2
 from tensorflow_serving.apis import prediction_service_pb2
+from tensorflow.contrib.util import make_tensor_proto
 
 
 def parse_args():
@@ -54,8 +55,7 @@ def main():
         # Call GAN model to make prediction on the image
         request.model_spec.name = 'gan'
         request.model_spec.signature_name = 'predict_images'
-        request.inputs['images'].CopyFrom(
-            tf.contrib.util.make_tensor_proto(data, shape=[1]))
+        request.inputs['images'].CopyFrom(make_tensor_proto(data, shape=[1]))
 
         result = stub.Predict(request, 60.0)  # 60 secs timeout
 
