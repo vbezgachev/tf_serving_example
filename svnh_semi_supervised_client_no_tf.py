@@ -30,17 +30,6 @@ import six as _six
 
 
 '''
-Taken from https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/framework/tensor_util.py
-'''
-def _FlattenToStrings(nested_strings):
-    if isinstance(nested_strings, (list, tuple)):
-        for inner in nested_strings:
-            for flattened_string in _FlattenToStrings(inner):
-                yield flattened_string
-    else:
-        yield nested_strings
-
-'''
 Takes from https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/util/compat.py
 '''
 def as_bytes(bytes_or_text, encoding='utf-8'):
@@ -110,7 +99,7 @@ def main():
             tensor_shape=tensor_shape_proto)
         
         # prepare the data for TensorProto
-        proto_values = _FlattenToStrings(data)
+        proto_values = [data]
         
         # put data into TensorProto and copy them into the request object
         tensor_proto.string_val.extend([as_bytes(x) for x in proto_values])
