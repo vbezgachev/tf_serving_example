@@ -96,13 +96,10 @@ def main():
         tensor_shape_proto = tensor_shape_pb2.TensorShapeProto(dim=dims)
         tensor_proto = tensor_pb2.TensorProto(
             dtype=types_pb2.DT_STRING,
-            tensor_shape=tensor_shape_proto)
-        
-        # prepare the data for TensorProto
-        proto_values = [data]
-        
+            tensor_shape=tensor_shape_proto,
+            string_val=[data])
+
         # put data into TensorProto and copy them into the request object
-        tensor_proto.string_val.extend([as_bytes(x) for x in proto_values])
         request.inputs['images'].CopyFrom(tensor_proto)
 
         # call prediction
