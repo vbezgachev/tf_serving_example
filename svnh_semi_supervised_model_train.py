@@ -36,7 +36,7 @@ def train(net, dataset, epochs, batch_size, z_size):
     '''
     saver = tf.train.Saver()
 
-    # noise to generate the fake images; it used used at the end
+    # noise to generate the fake images; it used at the end
     # of each epoch to check how good the generator is
     sample_z = np.random.normal(0, 1, size=(50, z_size))
 
@@ -47,7 +47,7 @@ def train(net, dataset, epochs, batch_size, z_size):
     with tf.Session() as sess:
         sess.run(tf.global_variables_initializer())
         for e in range(epochs):
-            print("Epoch", e)
+            print("Epoch: {}".format(e))
 
             t1e = time.time()
             num_examples = 0
@@ -73,7 +73,7 @@ def train(net, dataset, epochs, batch_size, z_size):
 
             # calcualte and print train statistic
             train_accuracy = num_correct / float(num_examples)
-            print("\t\tClassifier train accuracy: ", train_accuracy)
+            print("\t\tClassifier train accuracy: {}".format(train_accuracy))
 
             # run prediction on test images
             num_examples = 0
@@ -88,10 +88,11 @@ def train(net, dataset, epochs, batch_size, z_size):
 
             # calculate and print test statistic
             test_accuracy = num_correct / float(num_examples)
-            print("\t\tClassifier test accuracy", test_accuracy)
-            print("\t\tStep time: ", t2 - t1)
+            print("\t\tClassifier test accuracy: {}".format(test_accuracy))
+            print("\t\tStep : {}".format(steps))
+            print("\t\tStep time: {}".format(t2 - t1))
             t2e = time.time()
-            print("\t\tEpoch time: ", t2e - t1e)
+            print("\t\tEpoch time: {}".format(t2e - t1e))
 
             # generate samples for visual check
             gen_samples = sess.run(net.samples, feed_dict={
@@ -123,7 +124,7 @@ def main():
     learning_rate = 0.0003
 
     tf.reset_default_graph()
-    input_real = tf.placeholder(tf.float32, (None, *real_size), name='input_real')
+    input_real = tf.placeholder(dtype=tf.float32, shape=(None,) + real_size, name='input_real')
     net = GAN(input_real, z_size, learning_rate)
 
     # craete dataset

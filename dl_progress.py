@@ -1,5 +1,6 @@
 from tqdm import tqdm
 
+#https://github.com/tqdm/tqdm/blob/master/examples/tqdm_wget.py
 
 class DLProgress(tqdm):
     '''
