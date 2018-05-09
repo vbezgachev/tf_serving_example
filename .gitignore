@@ -6,3 +6,4 @@ __pycache__/
 export/
 .vscode/
 *.pkl
+*.pyc

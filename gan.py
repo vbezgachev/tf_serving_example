@@ -15,7 +15,7 @@ class GAN:
         :param num_classes: The number of classes to recognize.
         :param alpha: The slope of the left half of the leaky ReLU activation
         :param beta1: The beta1 parameter for Adam.
-        :param drop_rate: RThe probability of dropping a hidden unit (used in discriminator)
+        :param drop_rate: The probability of dropping a hidden unit (used in discriminator)
         """
 
         self.learning_rate = tf.Variable(learning_rate, trainable=False)
@@ -257,7 +257,7 @@ class GAN:
             # This trick and this value of m fix both those cases, but the naive implementation and
             # other values of m encounter various problems)
 
-            max_val = tf.reduce_max(class_logits, 1, keep_dims=True)
+            max_val = tf.reduce_max(class_logits, 1, keepdims=True)
             stable_class_logits = class_logits - max_val
             max_val = tf.squeeze(max_val)
             gan_logits = tf.log(tf.reduce_sum(tf.exp(stable_class_logits), 1)) + max_val

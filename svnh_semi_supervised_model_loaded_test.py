@@ -86,11 +86,12 @@ def load_and_predict_with_saved_model():
             scores = sess.run(output_tensor, {input_tensor: [image]})
 
         # print results
+        print("Image file name: {}".format(image_file_name))
         print("Scores: {}".format(scores))
 
 
 def main(_):
-    # load_and_predict_with_checkpoints()
+    load_and_predict_with_checkpoints()
     load_and_predict_with_saved_model()
 
 
