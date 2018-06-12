@@ -41,11 +41,6 @@ def preprocess_image(image_buffer):
     # adjust_* ops all require this range for dtype float.
     image = tf.image.convert_image_dtype(image, dtype=tf.float32)
 
-    # Networks accept images in batches.
-    # The first dimension usually represents the batch size.
-    # In our case the batch size is one.
-    image = tf.expand_dims(image, 0)
-
     # Finally, rescale to [-1,1] instead of [0, 1)
     image = tf.subtract(image, 0.5)
     image = tf.multiply(image, 2.0)
@@ -65,8 +60,6 @@ def main(_):
         tf_example = tf.parse_example(serialized_tf_example, feature_configs)
         jpegs = tf_example['image/encoded']
         images = tf.map_fn(preprocess_image, jpegs, dtype=tf.float32)
-        images = tf.squeeze(images, [0])
-        # now the image shape is (1, ?, ?, 3)
 
         # Create GAN model
         z_size = 100
