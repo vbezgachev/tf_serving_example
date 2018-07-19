@@ -7,3 +7,9 @@ export/
 .vscode/
 *.pkl
 *.pyc
+
+digits/
+performance/
+gan-export*
+
+inception_client.py

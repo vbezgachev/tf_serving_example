@@ -1,8 +1,8 @@
 import os
 from os.path import isfile
 from six.moves import urllib
-#from urllib.request import urlretrieve
-from urllib import urlretrieve
+from urllib.request import urlretrieve
+#from urllib import urlretrieve
 
 from scipy.io import loadmat
 from dl_progress import DLProgress
