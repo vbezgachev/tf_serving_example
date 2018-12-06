@@ -30,7 +30,11 @@ def parse_args():
                         dest='server',
                         default='172.17.0.2:9000',
                         help='prediction service host:port')
-    parser.add_argument('-i', '--image_path',
+    parser.add_argument("-i", "--image",
+                        dest="image",
+                        default='',
+                        help="path to image in JPEG format",)
+    parser.add_argument('-p', '--image_path',
                         dest='image_path',
                         default='',
                         help='path to images folder',)
@@ -42,25 +46,27 @@ def parse_args():
 
     host, port = args.server.split(':')
     
-    return host, port, args.image_path, args.batch_mode == 'true'
+    return host, port, args.image, args.image_path, args.batch_mode == 'true'
 
 
 def main():
     # parse command line arguments
-    host, port, image_path, batch_mode = parse_args()
+    host, port, image, image_path, batch_mode = parse_args()
 
     channel = implementations.insecure_channel(host, int(port))
     stub = prediction_service_pb2.beta_create_PredictionService_stub(channel)
     
-    filenames = [(image_path + '/' + f) for f in listdir(image_path) if isfile(join(image_path, f))]
-    files = []
     imagedata = []
-    for filename in filenames:
-        f = open(filename, 'rb')
-        files.append(f)
-
-        data = f.read()
-        imagedata.append(data)
+    if len(image_path) > 0:
+        filenames = [(image_path + '/' + f) for f in listdir(image_path) if isfile(join(image_path, f))]
+        for filename in filenames:
+            with open(filename, 'rb') as f:
+                data = f.read()
+                imagedata.append(data)
+    else:
+        with open(image, 'rb') as f:
+            data = f.read()
+            imagedata.append(data)
 
     start = time.time()
 
